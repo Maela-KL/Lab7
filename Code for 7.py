@@ -2,7 +2,7 @@ from machine import Pin, PWM
 import time
 from servo_translator import translate
 # Defining each part of the board
-shoulder = PWM(Pin(15))
+shoulder = PWM(Pin(0))
 elbow = PWM(Pin(1))
 wrist = PWM(Pin(2))
 # Now the frequency of each servo motor 
@@ -80,3 +80,4 @@ def main():
     for line in lines:
         execute_command(line)
         print("Finished executing line.")
+
