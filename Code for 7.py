@@ -28,7 +28,14 @@ def wrist_up():
     wrist.duty_u16(translate(0))
     time.sleep(0.5)
 def wrist_down():
-    wrist.duty_u16(translate(90))
+    wrist.duty_u16(translate(30))
+    time.sleep(0.5)
+#Movement of shoulder and elbow
+def move_shoulder(angle):
+    shoulder.duty_u16(translate(angle))
+    time.sleep(0.5)
+def move_elbow(angle):
+    elbow.duty_u16(translate(angle))
     time.sleep(0.5)
 # We have to read a g-code file
 def read_gcode(path):
@@ -39,33 +46,37 @@ def read_gcode(path):
             lines.append(line.strip())
     return lines
 # Now we need to parse the g-code commands
-#{"cmd": "G1", "s": 90, "e": 45}
-def parse_gcode(lines):
-    for line in lines:
-        if line.startswith('s'):
-            angle = int(line['s'])
-            shoulder.duty_u16(translate(angle))
-            time.sleep(0.5)
-        elif line.startswith('e'):
-            angle = int(line['e'])
-            elbow.duty_u16(translate(angle))
-            time.sleep(0.5)
-        elif line.startswith('w'):
-            wrist_up()
-            time.sleep(0.5)
-        elif line.startswith('u'):
-            wrist_down()
-            time.sleep(0.5)
-        return line
+#{"cmd": "G1", "s": 90, "e": 45}¸
+def parse_gcode_line(line):
+    parts = line.split()
+    cmd = parts[0]
+
+    parsed = {"cmd": cmd}
+
+    for p in parts[1:]:
+        if p.startswith("S"):
+            parsed["S"] = int(p[1:])
+        elif p.startswith("E"):
+            parsed["E"] = int(p[1:])
+
+    return parsed
 # execute the g-code commands
-def execute_gcode(lines):
-    line = lines["lines"]
-    if line == 'G1':
-        parse_gcode(lines)
+def execute_command(cmd):
+    command= cmd["cmd"]
+    if command == 'G1':
+        if 'S' in cmd:
+            move_shoulder(cmd["S"])
+        if 'E' in cmd:
+            move_elbow(cmd["E"])
+    elif command == 'M3':
+        wrist_up()
+    elif command == 'M5':
+        wrist_down()
 # Main function to run the program
 def main():
     lines = read_gcode('circle.gcode')
-    execute_gcode(lines)
+    execute_command(lines)
     print("Beginning plotter...")
     for line in lines:
-        execute_gcode(line)
+        execute_command(line)
+        print("Finished executing line.")
